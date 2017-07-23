@@ -1,9 +1,4 @@
----
-title: "Reproducible Research: Peer Assessment 1"
-output: 
-  html_document:
-    keep_md: true
----
+# Reproducible Research: Peer Assessment 1
 
 ### Loading and preprocessing the data  
 
@@ -11,19 +6,26 @@ This document will walk through an analysis of data collected through an individ
 
 First, we begin by loading the data into R. We assume that the raw dataset ("activity.csv") is already saved in the R session's current working directory.
 
-```{r}
+
+```r
         activity <- read.csv("activity.csv", stringsAsFactors = FALSE)
 ```
   
 We can see that the field "date" was read in as a 'character' type.  
 
-```{r}
+
+```r
         class(activity$date)
+```
+
+```
+## [1] "character"
 ```
   
 Below we  convert this to a more proper date format, prior to moving forward with any analysis.  
 
-```{r}
+
+```r
         activity$date <- as.Date(activity$date)
 ```
   
@@ -31,60 +33,71 @@ Below we  convert this to a more proper date format, prior to moving forward wit
   
 The first part of our analysis will require us to determine the total number of steps taken each day. The below performs this computation and stores it into a new variable, 'stepsPerDay'. Note that we ignore NA values for this part of our analysis.
 
-```{r}
+
+```r
         stepsPerDay <- aggregate(steps ~ date, data = activity, sum, na.rm = TRUE)
 ```
   
 Now we display a histogram of our findings for total number of steps for each day.  
 
-```{r, fig.height=4}
+
+```r
         hist(stepsPerDay$steps, breaks = 10, main = "Histogram of Steps per Day",
         xlab = "Number of Steps per Day", col = "darkgrey")
 ```
+
+![](PA1_template.rmd_files/figure-html/unnamed-chunk-5-1.png)<!-- -->
   
 Further analysis will allow us to calculate the mean and median number of steps per day.
   
-```{r}
+
+```r
         options(scipen = 999)
         meanStepsPerDay <- round(mean(stepsPerDay$steps),2)
         medianStepsPerDay <- round(median(stepsPerDay$steps),2)
 ```
   
-We can now say that this individual took a mean of `r meanStepsPerDay` steps per day and a median of `r medianStepsPerDay` steps per day.  
+We can now say that this individual took a mean of 10766.19 steps per day and a median of 10765 steps per day.  
   
 ### What is the average daily activity pattern?  
   
 Next, we'll make a time series plot of the 5 minute intervals and the average number of steps taken, averaged across all days.
 
-```{r}
+
+```r
         stepsPerInterval <- aggregate(steps ~ interval, data = activity, mean, na.rm = TRUE)
         plot(stepsPerInterval$interval, stepsPerInterval$steps, type = "l", main = 
         "Average Number of Steps Taken in Interval", xlab = "Interval", 
         ylab = "Average Number of Steps")
 ```
 
+![](PA1_template.rmd_files/figure-html/unnamed-chunk-7-1.png)<!-- -->
+
 Further analysis allows us to determine the interval that, on average, contains the highest number of steps across all days.
 
-```{r}
+
+```r
         maxStepsInterval <- stepsPerInterval$interval[which.max(stepsPerInterval$steps)]
         maxStepsValue <- stepsPerInterval$steps[which.max(stepsPerInterval$steps)]
 ```
   
-We now know that the interval `r maxStepsInterval` contains the highest number of average steps taken, with an average of `r maxStepsValue`.  
+We now know that the interval 835 contains the highest number of average steps taken, with an average of 206.1698113.  
 
 ### Imputing Missing Values
 
 There are a number of missing values within the dataset. Missing values are denoted by 'NA' within the dataset.  
 
-```{r}
+
+```r
         numberMissingValues <- sum(is.na(activity$steps))
 ```
 
-To be precise, there are `r numberMissingValues` missing values in the original dataset.  
+To be precise, there are 2304 missing values in the original dataset.  
   
 We now make the assumption that any missing values should be replaced with the average value for that 5 minute interval, as established in the 'stepsPerInterval' object. We save this new dataset into an object 'activityImputed'  
 
-```{r}
+
+```r
         activityImputed <- activity
         for(i in 1:nrow(activityImputed)){
                 if(is.na(activityImputed$steps[i])){
@@ -96,26 +109,31 @@ We now make the assumption that any missing values should be replaced with the a
   
 Now we create a histogram of our new, imputed dataset.  
 
-```{r}
+
+```r
         stepsPerDayImputed <- aggregate(steps ~ date, data = activityImputed, sum)
         hist(stepsPerDayImputed$steps, breaks = 10, main = "Histogram of Steps per Day (Imputed)",
         xlab = "Number of Steps per Day", col = "darkgrey")      
 ```
+
+![](PA1_template.rmd_files/figure-html/unnamed-chunk-11-1.png)<!-- -->
   
 Now we calculate the mean and median using our imputed dataset.
 
-```{r}
+
+```r
         meanStepsPerDayImputed <- round(mean(stepsPerDayImputed$steps),2)
         medianStepsPerDayImputed <- round(median(stepsPerDayImputed$steps),2)    
 ```
   
-We can now say that this individual took a mean of `r meanStepsPerDayImputed` steps per day and a median of `r medianStepsPerDayImputed` steps per day, when using our imputed dataset. The mean remained unchanged,since we imputed with the mean values for each interval. But the median moved slightly up and now matches the mean.  
+We can now say that this individual took a mean of 10766.19 steps per day and a median of 10766.19 steps per day, when using our imputed dataset. The mean remained unchanged,since we imputed with the mean values for each interval. But the median moved slightly up and now matches the mean.  
 
 ### Are there differences in activity patterns between weekdays and weekends?  
 
 Let's first add an identifier to our dataset that distinguishes weekdays from weekends.  
 
-```{r}
+
+```r
         activityImputed$dateCategory <- "Weekday"
         for(i in 1:nrow(activityImputed)){
                 if(weekdays(activityImputed[i,]$date) %in% c("Saturday", "Sunday")){
@@ -127,7 +145,8 @@ Let's first add an identifier to our dataset that distinguishes weekdays from we
   
 Next we calculate the average number of steps taken during each 5 minute interval.  
 
-```{r}
+
+```r
         stepsPerIntervalWeekday <- aggregate(steps ~ interval, data = subset(activityImputed, 
         activityImputed$dateCategory == "Weekday"), mean)
         stepsPerIntervalWeekend <- aggregate(steps ~ interval, data = subset(activityImputed, 
@@ -136,7 +155,8 @@ Next we calculate the average number of steps taken during each 5 minute interva
 
 Now let's create a plot of our results.  
 
-```{r, fig.height = 10}
+
+```r
         par(mfrow = c(2,1))
         plot(stepsPerIntervalWeekday$interval, stepsPerIntervalWeekday$steps, type = "l", main = 
         "Average Number of Steps Taken in Interval (Weekday)", xlab = "Interval", 
@@ -145,3 +165,5 @@ Now let's create a plot of our results.
         "Average Number of Steps Taken in Interval (Weekend)", xlab = "Interval", 
         ylab = "Average Number of Steps")
 ```
+
+![](PA1_template.rmd_files/figure-html/unnamed-chunk-15-1.png)<!-- -->
